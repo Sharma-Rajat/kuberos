@@ -2,11 +2,13 @@
 
 ---
 
-An OIDC authentication helper for Kubernetes' `kubectl`. Alternative UI using Element.io
+An OIDC authentication helper for Kubernetes' `kubectl`. Alternative UI using `Element.io` and `upn` as an OIDC claim.
 
 ![The kuberos UI](frontend/kuberos.png)
 
 ## Purpose
+
+This repo extends off of https://github.com/negz/kuberos
 
 Kubernetes supports several authentication methods, a popular one of which is OIDC.
 The `kubectl` commandline tool can be configured to use OIDC authentication, including
