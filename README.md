@@ -2,7 +2,7 @@
 
 ---
 
-An OIDC authentication helper for Kubernetes' `kubectl`. Alternative UI using `Element.io` and `upn` as an OIDC claim.
+An OIDC authentication helper for Kubernetes' `kubectl`. Alternative UI using `Element.io`.
 
 ![The kuberos UI](frontend/kuberos.png)
 
