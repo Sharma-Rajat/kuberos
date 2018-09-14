@@ -1,25 +1,18 @@
-# Kuberos - Element UI | [![Docker Pulls](https://img.shields.io/docker/pulls/rajats1709/kuberos.svg)](https://hub.docker.com/r/rajats1709/kuberos/) [![Godoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/negz/kuberos)
-
----
-
-An OIDC authentication helper for Kubernetes' `kubectl`. Alternative UI using `Element.io` and `upn` as an OIDC claim.
+# kuberos [![Docker Pulls](https://img.shields.io/docker/pulls/negz/kuberos.svg)](https://hub.docker.com/r/negz/kuberos/) [![Godoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/negz/kuberos) [![Travis](https://img.shields.io/travis/negz/kuberos.svg?maxAge=300)](https://travis-ci.org/negz/kuberos/) [![Codecov](https://img.shields.io/codecov/c/github/negz/kuberos.svg?maxAge=3600)](https://codecov.io/gh/negz/kuberos/)
+An OIDC authentication helper for Kubernetes' `kubectl`.
 
 ![The kuberos UI](frontend/kuberos.png)
 
 ## Purpose
-
-This repo extends off of https://github.com/negz/kuberos
-
 Kubernetes supports several authentication methods, a popular one of which is OIDC.
 The `kubectl` commandline tool can be configured to use OIDC authentication, including
 automatically refreshing its token on invocation. In order to enable this
 functionality `kubectl` must be configured with the following parameters:
-
-- A client ID
-- A client secret
-- An issuer URL
-- An ID token
-- A refresh token
+* A client ID
+* A client secret
+* An issuer URL
+* An ID token
+* A refresh token
 
 The latter two of these parameters must be aquired by performing an initial OIDC
 authentication outside of `kubectl`. OIDC is an awkward authentication method for a
@@ -35,13 +28,12 @@ generated from a supplied template of clusters. It also details how to manually 
 user and context to a cluster, and how to use kubectl.
 
 ## Usage
-
 Before using Kuberos you must
 [enable OIDC at the Kubernetes API server](https://kubernetes.io/docs/admin/authentication/#openid-connect-tokens).
 Refer to [this guide](https://cloud.google.com/community/tutorials/kubernetes-auth-openid-rbac)
 for details on how to get an OIDC client ID and secret from Google.
 
-Kuberos is [published](https://hub.docker.com/r/rajats1709/kuberos) to the Docker Hub.
+Kuberos is [published](https://hub.docker.com/r/negz/kuberos) to the Docker Hub.
 It must be configured with an OIDC issuer, client ID, and secret, as well as a
 partial `kubeconfig` file. For example:
 
@@ -61,14 +53,13 @@ clusters:
     server: https://kuberos.example.org
 EOF
 
-docker run -d -p 10003:10003 -v /tmp/cfg:/cfg "rajats1709/kuberos:latest" \
+docker run -d -p 10003:10003 -v /tmp/cfg:/cfg "negz/kuberos:latest" \
   /kuberos https://accounts.google.com $OIDC_CLIENT_ID /cfg/secret /cfg/template
 ```
 
 Kuberos supports the following arguments:
-
 ```bash
-$ docker run rajats1709/kuberos:latest /kuberos --help
+$ docker run negz/kuberos:latest /kuberos --help
 usage: kuberos [<flags>] [<oidc-issuer-url>] [<client-id>] [<client-secret-file>] [<kubecfg-template>]
 
 Provides OIDC authentication configuration for kubectl.
@@ -104,21 +95,20 @@ apiVersion: v1
 kind: Config
 current-context: staging
 clusters:
-  - name: production
-    cluster:
-      certificate-authority-data: REDACTED
-      server: https://prod.example.org
-  - name: staging
-    cluster:
-      certificate-authority-data: REDACTED
-      server: https://staging.example.org
+- name: production
+  cluster:
+    certificate-authority-data: REDACTED
+    server: https://prod.example.org
+- name: staging
+  cluster:
+    certificate-authority-data: REDACTED
+    server: https://staging.example.org
 ```
 
 Given the above template Kuberos will generate a `kubeconfig` file containing
 the two supplied clusters, the authenticated OIDC user, and a context for each
 cluster associating them with the OIDC user. These contexts inherit the name of
 the clusters, thus a user could interact with the production cluster by running:
-
 ```bash
 kubectl --context production cluster-info
 ```
@@ -128,7 +118,6 @@ If the `current-context` is set to the name of one of the clusters then the
 will be used.
 
 ## Deploying to Kubernetes
-
 Kuberos can be run inside a cluster as long as it can still communicate with
 your OIDC provider from inside the pod and your OIDC provider is set to
 redirect to your Kuberos endpoint (NodePort, LoadBalancer, etc).
@@ -153,35 +142,28 @@ spec:
     spec:
       # hostAliases are optional, to help route traffic to Dex / OIDC
       hostAliases:
-        - ip: "192.168.1.1"
-          hostnames:
-            - "dex.oidc.example.com"
+      - ip: "192.168.1.1"
+        hostnames:
+        - "dex.oidc.example.com"
       containers:
-        - image: rajats1709/kuberos:latest
-          name: kuberos
-          command:
-            [
-              "/kuberos",
-              "https://dex.oidc.example.com",
-              "example-app",
-              "/cfg/secret",
-              "/cfg/template",
-            ]
-          ports:
-            - name: http
-              containerPort: 10003
-          volumeMounts:
-            - name: config
-              mountPath: /cfg
-      volumes:
+      - image: negz/kuberos:latest
+        name: kuberos
+        command: ["/kuberos", "https://dex.oidc.example.com", "example-app", "/cfg/secret", "/cfg/template"]
+        ports:
+        - name: http
+          containerPort: 10003
+        volumeMounts:
         - name: config
-          configMap:
-            name: kuberos
-            items:
-              - key: template
-                path: template
-              - key: secret
-                path: secret
+          mountPath: /cfg
+      volumes:
+      - name: config
+        configMap:
+          name: kuberos
+          items:
+          - key: template
+            path: template
+          - key: secret
+            path: secret
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -205,16 +187,12 @@ data:
 ```
 
 ## Alternatives
-
 OIDC/LDAP/static helper specifically for `dex` (Helm charts for dex+helper included)
-
-- https://github.com/mintel/dex-k8s-authenticator
+* https://github.com/mintel/dex-k8s-authenticator
 
 OIDC helpers that run locally to setup `kubectl`:
-
-- https://github.com/micahhausler/k8s-oidc-helper
-- https://github.com/coreos/dex/tree/master/cmd/example-app
+* https://github.com/micahhausler/k8s-oidc-helper
+* https://github.com/coreos/dex/tree/master/cmd/example-app
 
 A Kubernetes JWT webhook helper with a similar UX to Kuberos
-
-- https://github.com/negz/kubehook
+* https://github.com/negz/kubehook
